@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>生日快乐 ✨</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Noto+Serif+SC:wght@400;600&family=Cormorant+Garamond:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+    <style>
+        @font-face {
+            font-family: 'HMingTiJ';
+            src: local('HMingTiJ'), local('HMingTiJ-Regular');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #FF9966 0%, #FFB88C 20%, #FFCC99 35%, #E8D4C4 50%, #C9D6E3 65%, #8EAFC2 80%, #5B8FA8 100%);
+            font-family: 'Noto Serif SC', serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        /* 背景漂浮光斑 */
+        .bg-orbs {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.5;
+            animation: floatOrb 20s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 400px; height: 400px;
+            background: linear-gradient(135deg, rgba(255, 200, 220, 0.6), rgba(255, 180, 200, 0.4));
+            top: -100px; left: -100px;
+            animation-delay: 0s;
+        }
+
+        .orb-2 {
+            width: 350px; height: 350px;
+            background: linear-gradient(135deg, rgba(255, 220, 180, 0.5), rgba(255, 200, 150, 0.3));
+            bottom: -80px; right: -80px;
+            animation-delay: -7s;
+        }
+
+        .orb-3 {
+            width: 250px; height: 250px;
+            background: linear-gradient(135deg, rgba(200, 180, 255, 0.4), rgba(220, 200, 255, 0.3));
+            top: 50%; right: 10%;
+            animation-delay: -14s;
+        }
+
+        @keyframes floatOrb {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -20px) scale(1.1); }
+            66% { transform: translate(-20px, 30px) scale(0.95); }
+        }
+
+        /* 散落光点 */
+        .sparkles {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .sparkle {
+            position: absolute;
+            width: 4px; height: 4px;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.9), transparent);
+            border-radius: 50%;
+            animation: twinkle 3s ease-in-out infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; transform: scale(0.8); }
+            50% { opacity: 0.8; transform: scale(1.2); }
+        }
+
+        /* 中心光晕 */
+        .center-glow {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(255, 240, 230, 0.4) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* 桌面纹理 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background:
+                repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(139, 90, 43, 0.02) 2px, rgba(139, 90, 43, 0.02) 4px);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .petals-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 98;
+            overflow: hidden;
+        }
+
+        .petal {
+            position: absolute;
+            font-size: 1.8rem;
+            opacity: 0;
+            z-index: 98;
+            filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.1));
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            perspective: 1500px;
+            touch-action: manipulation;
+        }
+
+        .postcard {
+            position: relative;
+            width: min(480px, 88vw);
+            aspect-ratio: 3 / 2;
+            transform-style: preserve-3d;
+            cursor: pointer;
+            transform: translateX(-120vw) translateY(0) rotate(-12deg) scale(0.85);
+            opacity: 0;
+        }
+
+        .postcard.arrived {
+            transform: translateX(0) translateY(0) rotate(0deg) scale(1);
+            opacity: 1;
+            transition: transform 1.8s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.6s ease;
+        }
+
+        .postcard.flipped {
+            transform: translateX(0) translateY(0) rotateY(180deg) scale(1);
+        }
+
+        .postcard-front, .postcard-back {
+            position: absolute;
+            width: 100%; height: 100%;
+            backface-visibility: hidden;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        /* 真实的明信片阴影效果 */
+        .postcard-front, .postcard-back {
+            box-shadow:
+                0 4px 8px rgba(0,0,0,0.06),
+                0 8px 16px rgba(0,0,0,0.08),
+                0 16px 32px rgba(0,0,0,0.06),
+                0 32px 64px rgba(0,0,0,0.04),
+                inset 0 0 0 1px rgba(0,0,0,0.05);
+        }
+
+        /* 明信片边缘磨损效果 */
+        .postcard-front::before, .postcard-back::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 4px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 50%, rgba(0,0,0,0.02) 100%);
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .postcard-front {
+            background: #fff;
+        }
+
+        .postcard-front img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+        }
+
+        /* 明信片边缘装饰线 - 双层边框 */
+        .postcard-front::after {
+            content: '';
+            position: absolute;
+            top: 10px; left: 10px; right: 10px; bottom: 10px;
+            border: 1px solid rgba(201, 168, 108, 0.25);
+            border-radius: 2px;
+            pointer-events: none;
+        }
+
+        /* 封面金色外边框 */
+        .postcard-front-wrapper {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border: 2px solid rgba(201, 168, 108, 0.4);
+            border-radius: 6px;
+            pointer-events: none;
+        }
+
+        /* 角落装饰 */
+        .corner-decor {
+            position: absolute;
+            font-size: 1rem;
+            opacity: 0.7;
+            z-index: 11;
+        }
+
+        .corner-decor.tl { top: 4px; left: 4px; }
+        .corner-decor.tr { top: 4px; right: 4px; }
+        .corner-decor.bl { bottom: 4px; left: 4px; }
+        .corner-decor.br { bottom: 4px; right: 4px; }
+
+        .postcard-front-hint {
+            position: absolute;
+            bottom: 15px; right: 15px;
+            background: rgba(255,255,255,0.95);
+            padding: 6px 14px;
+            border-radius: 18px;
+            font-size: 0.75rem;
+            color: #8b5a2b;
+            font-family: 'Noto Serif SC', serif;
+            animation: bounce 2s ease-in-out infinite;
+            opacity: 0;
+            transition: opacity 0.3s;
+            border: 1px solid rgba(201, 168, 108, 0.2);
+        }
+
+        .postcard.arrived .postcard-front-hint {
+            opacity: 1;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+
+        .postcard-back {
+            background: #faf7f2;
+            transform: rotateY(180deg);
+            padding: 25px 20px 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* 复古纸张纹理 */
+        .postcard-back::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background:
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* 明信片背面边框 - 双层设计 */
+        .postcard-back-frame {
+            position: absolute;
+            top: 10px; left: 10px; right: 10px; bottom: 10px;
+            border: 2px solid rgba(201, 168, 108, 0.5);
+            border-radius: 3px;
+            pointer-events: none;
+        }
+
+        .postcard-back-frame::before {
+            content: '';
+            position: absolute;
+            top: 4px; left: 4px; right: 4px; bottom: 4px;
+            border: 1px solid rgba(201, 168, 108, 0.25);
+            border-radius: 2px;
+        }
+
+        /* 邮戳装饰 - 复古风格 */
+        .stamp-decoration {
+            position: absolute;
+            top: 18px; right: 18px;
+            width: 65px;
+            height: 80px;
+            border: 3px solid rgba(139, 90, 43, 0.35);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            transform: rotate(6deg);
+            background: linear-gradient(135deg, rgba(255,235,200,0.6), rgba(255,220,180,0.4));
+            z-index: 1;
+            box-shadow:
+                inset 0 0 20px rgba(139, 90, 43, 0.1),
+                2px 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .stamp-decoration::before {
+            content: '';
+            position: absolute;
+            top: 4px; left: 4px; right: 4px; bottom: 4px;
+            border: 1px dashed rgba(139, 90, 43, 0.3);
+            border-radius: 2px;
+        }
+
+        .stamp-decoration::after {
+            content: 'POST';
+            position: absolute;
+            bottom: 6px;
+            font-size: 0.5rem;
+            font-family: 'Noto Serif SC', serif;
+            color: rgba(139, 90, 43, 0.5);
+            letter-spacing: 2px;
+        }
+
+        /* 分割线 */
+        .divider {
+            position: absolute;
+            left: 28px;
+            top: 80px;
+            width: 2px;
+            height: calc(100% - 100px);
+            background: linear-gradient(180deg, transparent, rgba(201, 168, 108, 0.5) 10%, rgba(201, 168, 108, 0.5) 90%, transparent);
+        }
+
+        .divider::before, .divider::after {
+            content: '◆';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.5rem;
+            color: rgba(201, 168, 108, 0.6);
+        }
+
+        .divider::before { top: -3px; }
+        .divider::after { bottom: -3px; }
+
+        .to-label {
+            position: relative;
+            z-index: 2;
+            font-family: 'HMingTiJ', 'Ma Shan Zheng', cursive;
+            font-size: 1.1rem;
+            color: #5D4037;
+            opacity: 0;
+            margin-bottom: 8px;
+            padding-left: 8px;
+        }
+
+        .letter-date {
+            position: relative;
+            z-index: 2;
+            text-align: right;
+            font-family: 'HMingTiJ', 'Ma Shan Zheng', cursive;
+            font-size: 0.95rem;
+            color: #6D4C41;
+            opacity: 0;
+            margin-top: 12px;
+            padding-right: 8px;
+        }
+
+        .letter-content {
+            position: relative;
+            z-index: 2;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-left: 12px;
+        }
+
+        .letter-title {
+            font-family: 'Playfair Display', 'Cormorant Garamond', 'Noto Serif SC', serif;
+            font-size: 2rem;
+            font-weight: 600;
+            color: #c9a86c;
+            opacity: 0;
+            letter-spacing: 0.3em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .letter-text {
+            font-family: 'HMingTiJ', 'Ma Shan Zheng', cursive;
+            font-size: clamp(0.8rem, 2.3vw, 1.05rem);
+            color: #3E2723;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        .letter-text .line {
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        .letter-title span, .letter-text .line span, .letter-date span {
+            opacity: 0;
+            display: inline-block;
+        }
+
+        .letter-title span.show, .letter-text .line span.show, .letter-date span.show {
+            opacity: 1;
+            animation: writeIn 0.35s ease forwards;
+        }
+
+        @keyframes writeIn {
+            0% { opacity: 0; transform: translateY(8px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .letter-date {
+            position: relative;
+            z-index: 2;
+            text-align: right;
+            font-family: 'Playfair Display', 'Cormorant Garamond', 'Noto Serif SC', serif;
+            font-size: 0.9rem;
+            color: #6D4C41;
+            opacity: 0;
+            margin-top: 8px;
+            padding-right: 8px;
+        }
+
+        .ink-trail {
+            position: absolute;
+            bottom: 8px; left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 6px;
+            opacity: 0;
+            z-index: 2;
+        }
+
+        .ink-dot {
+            width: 5px; height: 5px;
+            background: rgba(201, 168, 108, 0.6);
+            border-radius: 50%;
+            animation: inkPulse 2s ease-in-out infinite;
+        }
+
+        .ink-dot:nth-child(2) { animation-delay: 0.3s; }
+        .ink-dot:nth-child(3) { animation-delay: 0.6s; }
+
+        @keyframes inkPulse {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.4); }
+        }
+
+        .hint {
+            position: fixed;
+            bottom: 30px; left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Noto Serif SC', serif;
+            font-size: 0.9rem;
+            color: #8b5a2b;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            z-index: 50;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        .hint.show { opacity: 1; }
+
+        .flip-hint {
+            position: absolute;
+            bottom: 35px; left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.6rem;
+            color: rgba(139, 90, 43, 0.5);
+            opacity: 0;
+            z-index: 2;
+        }
+
+        .fireworks-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 200;
+            overflow: hidden;
+        }
+
+        .firework-particle {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0;
+        }
+
+        .firework-particle.exploding {
+            animation: particleExplode var(--duration, 2s) cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        @keyframes particleExplode {
+            0% { opacity: 1; transform: translate(0, 0) scale(1); }
+            50% { opacity: 1; }
+            100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0.2); }
+        }
+
+        .firework-particle::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 200%; height: 200%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 70%);
+        }
+
+        .firework-launch {
+            position: absolute;
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            opacity: 0;
+        }
+
+        .firework-launch.launching {
+            animation: launchRocket var(--duration, 1.2s) ease-out forwards;
+        }
+
+        @keyframes launchRocket {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            50% { opacity: 1; box-shadow: 0 0 20px var(--color), 0 0 40px var(--color); }
+            90% { opacity: 1; }
+            100% { opacity: 0; transform: translateY(var(--travel)) scale(0.5); }
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 15px; }
+            .postcard { width: min(320px, 92vw); }
+            .postcard-back {
+                padding: 20px 15px 15px;
+            }
+            .postcard-back-frame {
+                top: 8px; left: 8px; right: 8px; bottom: 8px;
+                border-width: 1.5px;
+            }
+            .letter-title {
+                font-size: 1.5rem;
+                margin-bottom: 6px;
+            }
+            .letter-text {
+                font-size: 0.85rem;
+                line-height: 1.5;
+            }
+            .letter-text .line {
+                margin-bottom: 3px;
+            }
+            .to-label {
+                font-size: 0.95rem;
+                margin-bottom: 5px;
+            }
+            .letter-date {
+                font-size: 0.8rem;
+                margin-top: 6px;
+            }
+            .postcard-front-hint { font-size: 0.65rem; padding: 5px 10px; bottom: 10px; right: 10px; }
+            .stamp-decoration {
+                width: 45px;
+                height: 55px;
+                font-size: 1.3rem;
+                top: 10px;
+                right: 10px;
+            }
+            .stamp-decoration::after { font-size: 0.4rem; }
+            .divider { left: 16px; top: 55px; }
+            .to-label { padding-left: 5px; }
+            .letter-content { padding-left: 8px; }
+            .hint { bottom: 20px; font-size: 0.8rem; }
+            .petal { font-size: 1.3rem; }
+            .flip-hint { bottom: 30px; font-size: 0.55rem; }
+            .corner-decor { font-size: 0.8rem; }
+            .ink-trail { bottom: 6px; }
+        }
+
+        @media (max-width: 380px) {
+            .postcard-back {
+                padding: 12px 10px 10px;
+            }
+            .postcard-back-frame {
+                top: 6px; left: 6px; right: 6px; bottom: 6px;
+            }
+            .letter-title {
+                font-size: 1.3rem;
+                margin-bottom: 5px;
+            }
+            .letter-text {
+                font-size: 0.78rem;
+                line-height: 1.45;
+            }
+            .letter-text .line {
+                margin-bottom: 2px;
+            }
+            .stamp-decoration {
+                width: 38px;
+                height: 48px;
+                font-size: 1.1rem;
+                top: 8px;
+                right: 8px;
+            }
+            .stamp-decoration::after { display: none; }
+            .divider {
+                left: 14px;
+                top: 50px;
+            }
+            .to-label {
+                font-size: 0.9rem;
+                padding-left: 4px;
+            }
+            .letter-date {
+                font-size: 0.8rem;
+            }
+            .ink-trail {
+                bottom: 10px;
+            }
+            .corner-decor { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="center-glow"></div>
+    <div class="bg-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+    <div class="sparkles" id="sparkles"></div>
+
+    
+    
+    <div class="petals-container" id="petalsContainer"></div>
+    <div class="fireworks-container" id="fireworksContainer"></div>
+
+    <div class="container">
+        <div class="postcard" id="postcard">
+            <div class="postcard-front">
+                <div class="postcard-front-wrapper"></div>
+                <span class="corner-decor tl">✿</span>
+                <span class="corner-decor tr">✿</span>
+                <span class="corner-decor bl">✿</span>
+                <span class="corner-decor br">✿</span>
+                <img src="https://minimax-algeng-chat-tts.oss-cn-wulanchabu.aliyuncs.com/ccv2%2F2026-05-02%2FMiniMax-M2.7%2F2036728547317388240%2F7eea81a17f8921a5df75046faecb601f3e32747ce7a86c6f5c5b615d067306d1..png?Expires=1777768069&OSSAccessKeyId=LTAI5tGLnRTkBjLuYPjNcKQ8&Signature=WSS7wXonjvoG3iBjFj9ONtxWejI%3D" alt="生日祝福">
+                <div class="postcard-front-hint">点击翻转 ✉️</div>
+            </div>
+            <div class="postcard-back">
+                <div class="postcard-back-frame"></div>
+                <div class="stamp-decoration">🎂</div>
+                <div class="divider"></div>
+                <div class="to-label" id="toLabel">To 过程</div>
+                <div class="letter-content">
+                    <h2 class="letter-title" id="letterTitle"></h2>
+                    <div class="letter-text" id="letterText">
+                        <span class="line" id="line1"></span>
+                        <span class="line" id="line2"></span>
+                        <span class="line" id="line3"></span>
+                        <span class="line" id="line4"></span>
+                    </div>
+                </div>
+                <div class="letter-date" id="letterDate"></div>
+                <div class="ink-trail" id="inkTrail">
+                    <div class="ink-dot"></div>
+                    <div class="ink-dot"></div>
+                    <div class="ink-dot"></div>
+                </div>
+                <div class="flip-hint" id="flipHint">点击可翻回</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="hint" id="hint"><p>✨ 这是送给你的生日礼物 ✨</p></div>
+
+    <script>
+        const postcard = document.getElementById('postcard');
+        const letterTitle = document.getElementById('letterTitle');
+        const letterDate = document.getElementById('letterDate');
+        const toLabel = document.getElementById('toLabel');
+        const inkTrail = document.getElementById('inkTrail');
+        const hint = document.getElementById('hint');
+        const flipHint = document.getElementById('flipHint');
+        const line1 = document.getElementById('line1');
+        const line2 = document.getElementById('line2');
+        const line3 = document.getElementById('line3');
+        const line4 = document.getElementById('line4');
+        const petalsContainer = document.getElementById('petalsContainer');
+        const fireworksContainer = document.getElementById('fireworksContainer');
+
+        // 创建背景散落光点
+        function createSparkles() {
+            const container = document.getElementById('sparkles');
+            for (let i = 0; i < 30; i++) {
+                const sparkle = document.createElement('div');
+                sparkle.className = 'sparkle';
+                sparkle.style.left = Math.random() * 100 + '%';
+                sparkle.style.top = Math.random() * 100 + '%';
+                sparkle.style.animationDelay = Math.random() * 3 + 's';
+                sparkle.style.width = (2 + Math.random() * 3) + 'px';
+                sparkle.style.height = sparkle.style.width;
+                container.appendChild(sparkle);
+            }
+        }
+
+        const petals = ['🌸', '💮', '🏵️', '🌺', '🌷', '🪷', '💐', '🌹', '🥀', '🍃', '🍁'];
+
+        let arrived = false, flipped = false, animationStarted = false, petalsCreated = false;
+
+        function createPetals() {
+            if (petalsCreated) return;
+            petalsCreated = true;
+
+            const screenW = window.innerWidth, screenH = window.innerHeight;
+            const cardW = Math.min(480, screenW * 0.88);
+            const cardH = cardW * (2/3);
+            const cardCenterX = screenW / 2, cardCenterY = screenH / 2;
+            const safeW = cardW / 2 + 100, safeH = cardH / 2 + 100;
+
+            const petalTargets = [
+                { x: cardCenterX - safeW, y: cardCenterY - safeH + 30 },
+                { x: cardCenterX - safeW - 20, y: cardCenterY - 50 },
+                { x: cardCenterX - safeW, y: cardCenterY + 50 },
+                { x: cardCenterX - safeW + 10, y: cardCenterY + safeH - 50 },
+                { x: cardCenterX + safeW, y: cardCenterY - safeH + 40 },
+                { x: cardCenterX + safeW + 20, y: cardCenterY - 30 },
+                { x: cardCenterX + safeW, y: cardCenterY + 60 },
+                { x: cardCenterX + safeW - 10, y: cardCenterY + safeH - 40 },
+                { x: cardCenterX - 80, y: cardCenterY - safeH - 20 },
+                { x: cardCenterX + 20, y: cardCenterY - safeH - 30 },
+                { x: cardCenterX + 100, y: cardCenterY - safeH - 10 },
+                { x: cardCenterX - 60, y: cardCenterY + safeH + 20 },
+                { x: cardCenterX + 40, y: cardCenterY + safeH + 10 },
+                { x: cardCenterX + 120, y: cardCenterY + safeH + 30 },
+                { x: cardCenterX - safeW - 40, y: cardCenterY - safeH - 30 },
+                { x: cardCenterX - safeW + 30, y: cardCenterY - safeH - 20 },
+                { x: cardCenterX + safeW + 40, y: cardCenterY - safeH - 25 },
+                { x: cardCenterX + safeW - 30, y: cardCenterY - safeH - 15 },
+            ];
+
+            petalTargets.forEach((target, i) => {
+                const petal = document.createElement('div');
+                petal.className = 'petal';
+                petal.textContent = petals[i % petals.length];
+                petal.style.fontSize = (0.8 + Math.random() * 0.4) * 1.8 + 'rem';
+                petal.style.left = target.x + 'px';
+                petal.style.top = target.y + 'px';
+
+                const startX = -80 - Math.random() * 100;
+                const startY = target.y + (Math.random() - 0.5) * 100;
+                const startRotate = -20 - Math.random() * 10;
+                petal.style.transform = `translate(${startX - target.x}px, ${startY - target.y}px) rotate(${startRotate}deg)`;
+
+                petalsContainer.appendChild(petal);
+
+                setTimeout(() => {
+                    petal.style.opacity = '1';
+                    petal.style.transition = `transform 1.8s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease`;
+                    petal.style.transform = `translate(0, 0) rotate(0deg)`;
+                }, 400 + i * 80);
+            });
+        }
+
+        function createFirework(x, y, color) {
+            const particleCount = 40 + Math.floor(Math.random() * 20);
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'firework-particle';
+                particle.style.left = x + 'px';
+                particle.style.top = y + 'px';
+                particle.style.width = (6 + Math.random() * 6) + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.backgroundColor = color;
+                particle.style.boxShadow = `0 0 8px ${color}, 0 0 16px ${color}`;
+
+                const angle = (i / particleCount) * 360 + (Math.random() - 0.5) * 30;
+                const velocity = 100 + Math.random() * 150;
+                const radians = angle * Math.PI / 180;
+                particle.style.setProperty('--tx', Math.cos(radians) * velocity + 'px');
+                particle.style.setProperty('--ty', Math.sin(radians) * velocity + 'px');
+                particle.style.setProperty('--duration', (1.5 + Math.random() * 0.8) + 's');
+
+                fireworksContainer.appendChild(particle);
+                setTimeout(() => particle.classList.add('exploding'), 10);
+                setTimeout(() => particle.remove(), 2500);
+            }
+        }
+
+        function createLaunch(x, startY, endY, color) {
+            const launch = document.createElement('div');
+            launch.className = 'firework-launch';
+            launch.style.left = x + 'px';
+            launch.style.top = startY + 'px';
+            launch.style.backgroundColor = color;
+            launch.style.setProperty('--color', color);
+            launch.style.setProperty('--travel', (endY - startY) + 'px');
+            launch.style.setProperty('--duration', (0.8 + Math.random() * 0.4) + 's');
+
+            fireworksContainer.appendChild(launch);
+            launch.classList.add('launching');
+
+            setTimeout(() => { createFirework(x, endY, color); launch.remove(); }, 900);
+            setTimeout(() => launch.remove(), 1500);
+        }
+
+        function launchFireworks() {
+            const screenW = window.innerWidth, screenH = window.innerHeight;
+            const colors = ['#FF6B6B', '#FFD93D', '#6BCB77', '#4D96FF', '#FF6B9D', '#C44CFF', '#FFA07A', '#FF69B4', '#FFE066', '#A8E6CF'];
+
+            const waves = [
+                { x: screenW * 0.2, d: 0 }, { x: screenW * 0.5, d: 150 }, { x: screenW * 0.8, d: 300 },
+                { x: screenW * 0.3, d: 600 }, { x: screenW * 0.6, d: 750 }, { x: screenW * 0.4, d: 900 }, { x: screenW * 0.7, d: 1050 },
+                { x: screenW * 0.25, d: 1300 }, { x: screenW * 0.5, d: 1400 }, { x: screenW * 0.75, d: 1500 }, { x: screenW * 0.55, d: 1600 },
+                { x: screenW * 0.35, d: 1900 }, { x: screenW * 0.65, d: 2000 }, { x: screenW * 0.5, d: 2100 },
+            ];
+
+            waves.forEach(pos => {
+                setTimeout(() => createLaunch(pos.x, screenH + 30, screenH * 0.25 + Math.random() * screenH * 0.2, colors[Math.floor(Math.random() * colors.length)]), pos.d);
+            });
+
+            setTimeout(() => {
+                for (let i = 0; i < 5; i++) {
+                    setTimeout(() => createFirework(screenW * 0.2 + Math.random() * screenW * 0.6, screenH * 0.15 + Math.random() * screenH * 0.2, colors[Math.floor(Math.random() * colors.length)]), i * 200);
+                }
+            }, 2500);
+        }
+
+        function deliverPostcard() {
+            setTimeout(() => { postcard.classList.add('arrived'); setTimeout(createPetals, 600); }, 400);
+        }
+
+        function stringToSpans(text) {
+            return text.split('').map(c => `<span>${c}</span>`).join('');
+        }
+
+        function startWriteAnimation() {
+            animationStarted = true;
+            const titleText = "生日快乐";
+            const lines = [
+                "祝姐姐生日快乐，一路玩得开心！",
+                "愿你继续看天下，也继续见自己。",
+                "带着好奇心出发，带着勇气走远。",
+                "最重要的健康与幸福也一定会一路相伴！"
+            ];
+            const dateText = "2026年5月2日";
+
+            setTimeout(() => toLabel.style.opacity = '1', 200);
+
+            setTimeout(() => {
+                letterTitle.innerHTML = stringToSpans(titleText);
+                letterTitle.querySelectorAll('span').forEach((s, i) => setTimeout(() => s.classList.add('show'), i * 150));
+                letterTitle.style.opacity = '1';
+            }, 400);
+
+            setTimeout(() => {
+                line1.innerHTML = stringToSpans(lines[0]);
+                line1.querySelectorAll('span').forEach((s, i) => setTimeout(() => s.classList.add('show'), i * 80));
+            }, 800);
+
+            setTimeout(() => {
+                line2.innerHTML = stringToSpans(lines[1]);
+                line2.querySelectorAll('span').forEach((s, i) => setTimeout(() => s.classList.add('show'), i * 80));
+            }, 800 + lines[0].length * 80 + 180);
+
+            setTimeout(() => {
+                line3.innerHTML = stringToSpans(lines[2]);
+                line3.querySelectorAll('span').forEach((s, i) => setTimeout(() => s.classList.add('show'), i * 80));
+            }, 800 + lines[0].length * 80 + 180 + lines[1].length * 80 + 180);
+
+            setTimeout(() => {
+                line4.innerHTML = stringToSpans(lines[3]);
+                line4.querySelectorAll('span').forEach((s, i) => setTimeout(() => s.classList.add('show'), i * 80));
+            }, 800 + lines[0].length * 80 + 180 + lines[1].length * 80 + 180 + lines[2].length * 80 + 180);
+
+            const dd = 800 + lines[0].length * 80 + 180 + lines[1].length * 80 + 180 + lines[2].length * 80 + 180 + lines[3].length * 80 + 250;
+            setTimeout(() => {
+                letterDate.innerHTML = stringToSpans(dateText);
+                letterDate.querySelectorAll('span').forEach((s, i) => setTimeout(() => s.classList.add('show'), i * 70));
+                letterDate.style.opacity = '1';
+            }, dd);
+
+            setTimeout(() => inkTrail.style.opacity = '1', dd + 200);
+            setTimeout(() => launchFireworks(), dd + 400);
+            setTimeout(() => flipHint.style.opacity = '0.5', dd + 600);
+        }
+
+        postcard.addEventListener('click', function(e) {
+            if (!arrived) return;
+            flipped = !flipped;
+            if (flipped) {
+                postcard.classList.add('flipped');
+                hint.classList.remove('show');
+                flipHint.style.opacity = '0';
+                if (!animationStarted) startWriteAnimation();
+            } else {
+                postcard.classList.remove('flipped');
+                setTimeout(() => { hint.textContent = '✨ 再次感谢遇见你 ✨'; hint.classList.add('show'); }, 300);
+            }
+        });
+
+        window.addEventListener('load', () => {
+            createSparkles();
+            setTimeout(() => hint.classList.add('show'), 300);
+            deliverPostcard();
+        });
+
+        postcard.addEventListener('transitionend', function(e) {
+            if (e.propertyName === 'transform' && !flipped) {
+                arrived = true;
+                hint.textContent = '✨ 点击翻转查收祝福 ✨';
+            }
+        });
+    </script>
+</body>
+</html>
